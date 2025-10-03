@@ -14,7 +14,10 @@ env:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -41,3 +44,16 @@ jobs:
 
       - name: 🏗️ Build
         run: pnpm run build
+
+      - name: 🧪 Test command with spaces
+        shell: bash
+        run: |
+          # Start the server in the background
+          node dist/main.js "node -e \"console.log('test output')\"" --port 3017 --quiet &
+          SERVER_PID=$!
+
+          # Give the server time to start
+          sleep 2
+
+          # Kill the server
+          kill $SERVER_PID || true
