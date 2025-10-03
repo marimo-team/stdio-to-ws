@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import minimist from "minimist";
+import { parseArgsStringToArgv } from "string-argv";
 import { startWebSocketServer } from "./stdio-to-ws.js";
 
 const argv = minimist(process.argv.slice(2), {
@@ -32,7 +33,7 @@ if (!cmd) {
 }
 
 void startWebSocketServer({
-  command: cmd.split(" "),
+  command: parseArgsStringToArgv(cmd),
   port: argv.port,
   quiet: argv.quiet,
 });

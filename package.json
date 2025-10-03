@@ -55,6 +55,7 @@
   },
   "dependencies": {
     "minimist": "^1.2.8",
+    "string-argv": "^0.3.2",
     "ws": "^8.18.3"
   }
 }

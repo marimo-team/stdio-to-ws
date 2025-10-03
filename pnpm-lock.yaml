@@ -11,6 +11,9 @@ importers:
       minimist:
         specifier: ^1.2.8
         version: 1.2.8
+      string-argv:
+        specifier: ^0.3.2
+        version: 0.3.2
       ws:
         specifier: ^8.18.3
         version: 8.18.3
