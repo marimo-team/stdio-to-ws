@@ -9,7 +9,7 @@
   "sideEffects": false,
   "repository": {
     "type": "git",
-    "url": "https://github.com/myles/stdio-to-ws"
+    "url": "https://github.com/marimo-team/stdio-to-ws"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
