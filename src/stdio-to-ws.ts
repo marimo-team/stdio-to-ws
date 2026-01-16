@@ -1,9 +1,12 @@
 import { spawn } from "node:child_process";
+import { createInterface } from "node:readline";
 import { inspect } from "node:util";
 import type { WebSocket } from "ws";
 import { WebSocketServer } from "ws";
 
 let isQuiet = false;
+
+export type FramingMode = "raw" | "line";
 
 function logError(...args: unknown[]): void {
   if (!isQuiet) console.error("[stdio-to-ws]", ...args);
@@ -25,8 +28,44 @@ function prettyPrintMessage(
   }
 }
 
-function handleWebSocketConnection(command: string[], webSocket: WebSocket): void {
+function handleWebSocketConnection(
+  command: string[],
+  webSocket: WebSocket,
+  framing: FramingMode,
+): void {
   const child = spawn(command[0]!, command.slice(1));
+
+  const closeStdout = (() => {
+    if (framing === "line") {
+      child.stdout.setEncoding("utf8");
+      const stdoutLines = createInterface({
+        input: child.stdout,
+        crlfDelay: Infinity,
+      });
+      stdoutLines.on("line", (line) => {
+        try {
+          if (line.length === 0) return;
+          prettyPrintMessage("[Server → Client]", line);
+          webSocket.send(line);
+        } catch (error) {
+          logError("Failed to send data to WebSocket:", error);
+        }
+      });
+      return () => stdoutLines.close();
+    }
+
+    child.stdout.on("data", (data) => {
+      try {
+        const message = data.toString();
+        const content = message.replace(/^Content-Length: \d+\r?\n\r?\n/, "");
+        prettyPrintMessage("[Server → Client]", content);
+        webSocket.send(content);
+      } catch (error) {
+        logError("Failed to send data to WebSocket:", error);
+      }
+    });
+    return () => {};
+  })();
 
   child.on("error", (error) => {
     logError("Child process error:", error);
@@ -41,9 +80,15 @@ function handleWebSocketConnection(command: string[], webSocket: WebSocket): voi
   webSocket.on("message", (data) => {
     try {
       const message = data.toString();
-      const content = message.replace(/^Content-Length: \d+\r?\n\r?\n/, "");
-      prettyPrintMessage("[Client → Server]", content);
-      child.stdin.write(content);
+      if (framing === "line") {
+        prettyPrintMessage("[Client → Server]", message);
+        const line = message.endsWith("\n") || message.endsWith("\r\n") ? message : `${message}\n`;
+        child.stdin.write(line);
+      } else {
+        const content = message.replace(/^Content-Length: \d+\r?\n\r?\n/, "");
+        prettyPrintMessage("[Client → Server]", content);
+        child.stdin.write(content);
+      }
     } catch (error) {
       logError("Failed to write to child stdin:", error);
     }
@@ -51,17 +96,7 @@ function handleWebSocketConnection(command: string[], webSocket: WebSocket): voi
 
   webSocket.on("close", () => {
     child.kill();
-  });
-
-  child.stdout.on("data", (data) => {
-    try {
-      const message = data.toString();
-      const content = message.replace(/^Content-Length: \d+\r?\n\r?\n/, "");
-      prettyPrintMessage("[Server → Client]", content);
-      webSocket.send(content);
-    } catch (error) {
-      logError("Failed to send data to WebSocket:", error);
-    }
+    closeStdout();
   });
 
   child.stderr.on("data", (data) => {
@@ -73,9 +108,10 @@ export function startWebSocketServer(opts: {
   port: number;
   command: string[];
   corsOrigin?: string | string[] | boolean;
+  framing?: FramingMode;
   quiet?: boolean;
 }): void {
-  const { port, command, corsOrigin, quiet = false } = opts;
+  const { port, command, corsOrigin, framing = "raw", quiet = false } = opts;
   isQuiet = quiet;
 
   const wss = new WebSocketServer({
@@ -96,7 +132,7 @@ export function startWebSocketServer(opts: {
 
   wss.on("connection", (webSocket) => {
     log("New WebSocket connection");
-    handleWebSocketConnection(command, webSocket);
+    handleWebSocketConnection(command, webSocket, framing);
   });
 
   log(`WebSocket server listening on port ${port}`);
