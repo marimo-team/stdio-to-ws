@@ -111,7 +111,7 @@ export function startWebSocketServer(opts: {
   framing?: FramingMode;
   quiet?: boolean;
 }): void {
-  const { port, command, corsOrigin, framing = "raw", quiet = false } = opts;
+  const { port, command, corsOrigin, framing = "line", quiet = false } = opts;
   isQuiet = quiet;
 
   const wss = new WebSocketServer({
