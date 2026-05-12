@@ -26,6 +26,7 @@
     "process"
   ],
   "license": "Apache-2.0",
+  "packageManager": "pnpm@10.28.2",
   "devDependencies": {
     "@biomejs/biome": "^2.1.3",
     "@types/minimist": "^1.2.5",
