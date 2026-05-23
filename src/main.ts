@@ -41,10 +41,16 @@ if (framing !== "raw" && framing !== "line") {
   process.exit(1);
 }
 
+const ping = argv.ping;
+if (typeof ping !== "number" || ping < 0) {
+  console.error(`Invalid ping interval: ${ping}`);
+  process.exit(1);
+}
+
 void startWebSocketServer({
   command: parseArgsStringToArgv(cmd),
   port: argv.port,
   framing,
-  ping: argv.ping,
+  ping,
   quiet: argv.quiet,
 });
