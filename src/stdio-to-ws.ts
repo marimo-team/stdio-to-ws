@@ -32,6 +32,7 @@ function handleWebSocketConnection(
   command: string[],
   webSocket: WebSocket,
   framing: FramingMode,
+  ping: number,
 ): void {
   const child = spawn(command[0]!, command.slice(1));
 
@@ -94,7 +95,16 @@ function handleWebSocketConnection(
     }
   });
 
+  let interval: NodeJS.Timeout | null = null;
+  if (ping) {
+    interval = setInterval(() => webSocket.ping(), ping);
+  }
+
   webSocket.on("close", () => {
+    if (interval) {
+      clearInterval(interval);
+    }
+
     child.kill();
     closeStdout();
   });
@@ -109,9 +119,10 @@ export function startWebSocketServer(opts: {
   command: string[];
   corsOrigin?: string | string[] | boolean;
   framing?: FramingMode;
+  ping?: number;
   quiet?: boolean;
 }): void {
-  const { port, command, corsOrigin, framing = "line", quiet = false } = opts;
+  const { port, command, corsOrigin, framing = "line", ping = 0, quiet = false } = opts;
   isQuiet = quiet;
 
   const wss = new WebSocketServer({
@@ -132,7 +143,7 @@ export function startWebSocketServer(opts: {
 
   wss.on("connection", (webSocket) => {
     log("New WebSocket connection");
-    handleWebSocketConnection(command, webSocket, framing);
+    handleWebSocketConnection(command, webSocket, framing, ping);
   });
 
   log(`WebSocket server listening on port ${port}`);
