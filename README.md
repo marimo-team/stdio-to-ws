@@ -12,6 +12,7 @@ npx stdio-to-ws [options] "stdio command"
 
 - `-p, --port <port>`: port to listen on (default: 3000)
 - `-f, --framing <mode>`: message framing (`raw` | `line`, default: `line`)
+- `--ping <ms>`: Send WebSocket ping frames every `<ms>` milliseconds (default: 0, disabled)
 - `-q, --quiet`: suppress logging output
 - `-h, --help`: show help
 
