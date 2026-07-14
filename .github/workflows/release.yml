@@ -1,7 +1,6 @@
 name: Release
 
-permissions:
-  contents: read
+permissions: {}
 
 on:
   push:
@@ -24,7 +23,6 @@ jobs:
         with:
           node-version: 24
           cache: pnpm
-
 
       - name: 📥 Install dependencies
         run: pnpm install --ignore-scripts --frozen-lockfile
@@ -73,6 +71,8 @@ jobs:
             LICENSE
           retention-days: 1
           if-no-files-found: error
+    permissions:
+      contents: read
 
   publish:
     needs: build
