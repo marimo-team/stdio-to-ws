@@ -5,7 +5,7 @@ import { startWebSocketServer } from "./stdio-to-ws.js";
 
 const argv = minimist(process.argv.slice(2), {
   alias: { p: "port", h: "help", q: "quiet", f: "framing" },
-  default: { port: 3000, framing: "line" },
+  default: { port: 3000, framing: "line", ping: 0 },
   boolean: ["quiet"],
   string: ["framing"],
 });
@@ -18,6 +18,7 @@ Options:
   -p, --port <port>    Port to listen on (default: 3000)
   -q, --quiet         Suppress logging output
   -f, --framing <mode> Message framing: raw | line (default: line)
+      --ping <ms>     Send WebSocket ping frames every <ms> milliseconds (default: 0, disabled)
   -h, --help          Show this help message
 
 Example:
@@ -40,9 +41,16 @@ if (framing !== "raw" && framing !== "line") {
   process.exit(1);
 }
 
+const ping = argv.ping;
+if (typeof ping !== "number" || ping < 0) {
+  console.error(`Invalid ping interval: ${ping}`);
+  process.exit(1);
+}
+
 void startWebSocketServer({
   command: parseArgsStringToArgv(cmd),
   port: argv.port,
   framing,
+  ping,
   quiet: argv.quiet,
 });
