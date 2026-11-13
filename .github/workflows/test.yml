@@ -14,7 +14,7 @@ env:
 
 jobs:
   test:
-    runs-on: ${{ matrix.os }}
+    runs-on: "${{ matrix.os == 'windows-latest' && (vars.CI_RUNNER_WINDOWS || 'windows-latest') || (matrix.os) }}"
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
