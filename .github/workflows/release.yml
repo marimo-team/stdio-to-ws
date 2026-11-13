@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-p-small
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
@@ -76,7 +76,7 @@ jobs:
 
   publish:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-p-small
     permissions:
       id-token: write
       contents: read
@@ -102,7 +102,7 @@ jobs:
 
   release-notes:
     needs: publish
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-p-small
     permissions:
       contents: write
     steps:
